@@ -6,14 +6,14 @@ export type GameDocument = Game & Document;
 export interface Card {
   id: string;
   animal: string;
-  position: string; // e.g., 'A1', 'B2'
+  position: string; 
   isMatched: boolean;
   isRevealed: boolean;
 }
 
 export interface GameMove {
-  cards: string[]; // positions like ['A1', 'B2']
-  animals: string[]; // the animal types revealed
+  cards: string[]; 
+  animals: string[]; 
   isMatch: boolean;
   timestamp: Date;
 }
@@ -43,7 +43,7 @@ export class Game {
   isCompleted: boolean;
 
   @Prop({ type: Array, default: [] })
-  matchedPairs: string[][]; // pairs of positions that are matched
+  matchedPairs: string[][]; 
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);

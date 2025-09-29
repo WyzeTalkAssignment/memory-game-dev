@@ -6,14 +6,25 @@ import { Game, GameDocument, Card, GameMove } from './schemas/game.schema';
 import { CreateGameDto } from './dto/create-game.dto';
 import { MakeMoveDto } from './dto/make-move.dto';
 
+export interface PaginatedGameHistory {
+  moves: GameMove[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 @Injectable()
 export class GamesService {
-
   private readonly animals = [
     'Dog', 'Cat', 'Elephant', 'Lion', 'Tiger', 'Bear', 'Rabbit', 'Horse'
   ];
 
-  private readonly positions = [
+  private readonly validPositions = [
     'A1', 'A2', 'A3', 'A4',
     'B1', 'B2', 'B3', 'B4', 
     'C1', 'C2', 'C3', 'C4',
@@ -27,14 +38,17 @@ export class GamesService {
   async createGame(createGameDto: CreateGameDto): Promise<Game> {
     const sessionKey = createGameDto.sessionKey || uuidv4();
     
-    // Check if game with this session key already exists and is not completed
+    if (createGameDto.sessionKey) {
+      this.validateSessionKey(createGameDto.sessionKey);
+    }
+    
     const existingGame = await this.gameModel.findOne({ 
       sessionKey, 
       isCompleted: false 
     });
     
     if (existingGame) {
-      throw new BadRequestException('Existing game already exists for this session');
+      throw new BadRequestException('Active game already exists for this session');
     }
 
     const shuffledCards = this.createShuffledCards();
@@ -53,10 +67,11 @@ export class GamesService {
   }
 
   async findGame(sessionKey: string): Promise<Game> {
+    this.validateSessionKey(sessionKey);
+    
     const game = await this.gameModel.findOne({ sessionKey });
     
     if (!game) {
-
       throw new NotFoundException('Game not found');
     }
     return game;
@@ -67,8 +82,11 @@ export class GamesService {
     animals: string[];
     gameCompleted: boolean;
     message: string;
+    matchedPositions?: string[];
   }> {
-    const game = await this.findGame(sessionKey) as GameDocument;;
+    this.validateSessionKey(sessionKey);
+    
+    const game = await this.findGame(sessionKey) as GameDocument;
     
     if (game.isCompleted) {
       throw new BadRequestException('Game is already completed');
@@ -76,18 +94,12 @@ export class GamesService {
 
     const { cards: positions } = makeMoveDto;
     
-    // Validate positions
-    if (positions[0] === positions[1]) {
+    this.validateCardPositions(positions, game);
 
-      throw new BadRequestException('Cannot select the same card twice');
-    }
-
-    // Check if cards are already matched
     const card1 = game.cards.find(c => c.position === positions[0]);
     const card2 = game.cards.find(c => c.position === positions[1]);
     
     if (!card1 || !card2) {
-
       throw new BadRequestException('Invalid card positions');
     }
     
@@ -98,7 +110,6 @@ export class GamesService {
     const animals = [card1.animal, card2.animal];
     const isMatch = card1.animal === card2.animal;
     
-    // Create a move record on mongo
     const move: GameMove = {
       cards: positions,
       animals,
@@ -109,10 +120,12 @@ export class GamesService {
     game.moves.push(move);
     game.attempts += 1;
 
+    let matchedPositions: string[] = [];
     if (isMatch) {
       card1.isMatched = true;
       card2.isMatched = true;
       game.matchedPairs.push([positions[0], positions[1]]);
+      matchedPositions = [positions[0], positions[1]];
       
       const allMatched = game.cards.every(card => card.isMatched);
       if (allMatched) {
@@ -124,7 +137,7 @@ export class GamesService {
     await game.save();
 
     const message = isMatch 
-      ? `Match found! ${animals[0]} pairs matched.`
+      ? `Match found! ${animals[0]} pairs matched.` 
       : `No match. ${animals[0]} and ${animals[1]} don't match.`;
 
     return {
@@ -132,12 +145,11 @@ export class GamesService {
       animals,
       gameCompleted: game.isCompleted,
       message,
+      ...(isMatch && { matchedPositions })
     };
   }
   
-// check chache first  then mongo
   async getGameState(sessionKey: string): Promise<{
-
     sessionKey: string;
     attempts: number;
     matchedPairs: string[][];
@@ -145,17 +157,19 @@ export class GamesService {
     startTime: Date;
     endTime?: Date;
     revealedCards: { position: string; animal: string }[];
+    remainingCards: number;
   }> {
+    this.validateSessionKey(sessionKey);
 
     const game = await this.findGame(sessionKey);
     
-    // Only show animals for matched cards
     const revealedCards = game.cards
       .filter(card => card.isMatched)
       .map(card => ({ position: card.position, animal: card.animal }));
 
+    const remainingCards = game.cards.filter(card => !card.isMatched).length;
+
     return {
-      
       sessionKey: game.sessionKey,
       attempts: game.attempts,
       matchedPairs: game.matchedPairs,
@@ -163,25 +177,140 @@ export class GamesService {
       startTime: game.startTime,
       endTime: game.endTime,
       revealedCards,
+      remainingCards,
+    };
+  }
+
+  async getGameHistory(
+    sessionKey: string, 
+    limit: number = 10, 
+    page: number = 1
+  ): Promise<PaginatedGameHistory> {
+    this.validateSessionKey(sessionKey);
+    this.validatePaginationParams(limit, page);
+
+    const game = await this.findGame(sessionKey);
+    
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedMoves = game.moves.slice(startIndex, endIndex);
+    const totalMoves = game.moves.length;
+    const totalPages = Math.ceil(totalMoves / limit);
+
+    return {
+      moves: paginatedMoves,
+      pagination: {
+        page,
+        limit,
+        total: totalMoves,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
+  }
+
+  async getCompletedGames(
+    limit: number = 10,
+    page: number = 1
+  ): Promise<{
+    games: Game[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }> {
+    this.validatePaginationParams(limit, page);
+
+    const skip = (page - 1) * limit;
+    
+    const [games, total] = await Promise.all([
+      this.gameModel
+        .find({ isCompleted: true })
+        .sort({ endTime: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.gameModel.countDocuments({ isCompleted: true })
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      games,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     };
   }
 
   private createShuffledCards(): Card[] {
     const animalPairs = [...this.animals, ...this.animals];
     
-    // Shuffle
+    // shuffle
     for (let i = animalPairs.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [animalPairs[i], animalPairs[j]] = [animalPairs[j], animalPairs[i]];
     }
 
-    // Create cards with positions
-    return this.positions.map((position, index) => ({
+    return this.validPositions.map((position, index) => ({
       id: uuidv4(),
       animal: animalPairs[index],
       position,
       isMatched: false,
       isRevealed: false,
     }));
+  }
+
+  private validateCardPositions(positions: string[], game: Game): void {
+    if (positions.length !== 2) {
+      throw new BadRequestException('Must select exactly 2 cards');
+    }
+
+    if (positions[0] === positions[1]) {
+      throw new BadRequestException('Cannot select the same card twice');
+    }
+
+    // Check if positions are valid
+    const positionRegex = /^[A-D][1-4]$/;
+    if (!positionRegex.test(positions[0]) || !positionRegex.test(positions[1])) {
+      throw new BadRequestException('Card positions must be in format A1, B2, C3, D4 etc.');
+    }
+
+    // Check if positions exist in the game
+    const validPositionsSet = new Set(this.validPositions);
+    if (!validPositionsSet.has(positions[0]) || !validPositionsSet.has(positions[1])) {
+      throw new BadRequestException('Invalid card positions');
+    }
+  }
+
+  private validateSessionKey(sessionKey: string): void {
+    if (!sessionKey || sessionKey.trim().length === 0) {
+      throw new BadRequestException('Session key is required');
+    }
+
+  }
+
+  private validatePaginationParams(limit: number, page: number): void {
+    if (limit <= 0 || limit > 100) {
+      throw new BadRequestException('Limit must be between 1 and 100');
+    }
+
+    if (page <= 0) {
+      throw new BadRequestException('Page must be greater than 0');
+    }
+
+    if (!Number.isInteger(limit) || !Number.isInteger(page)) {
+      throw new BadRequestException('Limit and page must be integers');
+    }
   }
 }

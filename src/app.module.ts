@@ -6,7 +6,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 @Module({
   imports: [
     MongooseModule.forRoot(
-      process.env.MONGODB_URI || 'mongodb+srv://thatodon_db_user:zeR6HTcCSu8Ou5dl@cluster0.12ajxnp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/memory-game'
+        process.env.MONGODB_URI || 'mongodb://localhost:27017/memory-game'
     ),
   
     GamesModule,

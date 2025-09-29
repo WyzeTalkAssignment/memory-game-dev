@@ -29,16 +29,19 @@ The memory game works as follows:
 
 - **Framework**: NestJS with TypeScript
 
-- **Database**: MongoDB with Mongoose ODM. I used a cloud-hosted (Atlas) instance to test, but ideal we would have a mongo instance in our cluster. if you prefer a local instance setup 
+- **Database**: MongoDB with Mongoose ODM. I used a cloud-hosted (Atlas) instance, but we can also use a mongo instance in our cluster. if you prefer a local instance setup: 
 
 MONGODB_URI=mongodb://localhost:27017/memory-game
 
 - **Database Production setup**: In PROD we will spin up a k8s service and them kubenette manage it.to reduce th load on MongoDB and promote horizontal scaling and speed up the game, we would impl a shared redis cache in the cluster
 
-- **Validation**: class-validator and class-transformer
 - **Testing**: Jest with comprehensive unit tests
-- **Containerization**: Docker with multi-stage builds
+
+- **Containerization**: Docker with automated build (docker-compose)
+
 - **Process Management**: PM2 for production deployment
+
+Added performance tweaks Cache management and pagination support for front-end
 
 ## 📋 API Endpoints
 

@@ -61,7 +61,7 @@ export class GamesController {
    * and game progress. Sensitive information like card positions is filtered out.
    * 
    * @param sessionKey - Unique identifier for the game session
-   * @returns A Promise that resolves to the game state 
+   * @returns A Promise that resolves to the game state. Game moves have a default limit of 10 records per page
    * */
   @Get(':sessionKey/status')
   async getGameState(@Param('sessionKey') sessionKey: string) {

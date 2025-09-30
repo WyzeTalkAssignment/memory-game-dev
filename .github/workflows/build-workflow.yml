@@ -8,7 +8,7 @@ on:
 
 env:
   NODE_VERSION: '18.x'
-  REGISTRY: ghcr.io
+  REGISTRY: https://github.com/WyzeTalkAssignment
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:

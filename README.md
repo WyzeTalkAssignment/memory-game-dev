@@ -198,22 +198,7 @@ GET /leaderboard?limit=5
 
 ```
 
-#### Get Player Statistics
-```http
-GET /leaderboard/player/:sessionKey
-```
-
-**Response:**
-```json
-{
-  "totalGames": 10,
-  "completedGames": 8,
-  "bestAttempts": 12,
-  "averageAttempts": 15.5
-}
-```
-
-## 🏗 Installation & Development
+## Installation & Development
 
 ### Prerequisites
 - Node.js 18+ 
@@ -284,7 +269,7 @@ D1  D2  D3  D4
 The game uses 8 different animals, each appearing exactly twice:
 - Dog, Cat, Elephant, Lion, Tiger, Bear, Rabbit, Horse
 
-## 🧪 Testing
+##  Testing
 
 The project includes comprehensive unit tests covering:
 
@@ -332,7 +317,7 @@ npm run test:watch
 }
 ```
 
-## 🔒 Error Handling
+## Error Handling
 
 The API provides comprehensive error handling with appropriate HTTP status codes:
 
@@ -341,7 +326,7 @@ The API provides comprehensive error handling with appropriate HTTP status codes
 - **422 Unprocessable Entity**: Validation errors in request body
 - **500 Internal Server Error**: Unexpected server errors
 
-## 🚀 Production Deployment
+##  Production Deployment
 
 ### Environment Variables
 ```bash
@@ -361,31 +346,7 @@ docker run -p 3000:3000 \
   memory-game-api
 ```
 
-### Health Checks
-The application includes Docker health checks and process monitoring:
-- Endpoint health check on `/leaderboard`
-- Automatic container restart on failure
-- MongoDB connection monitoring
-
-## 📈 Performance & Scalability
-
-- **Database Indexing**: Optimized queries on sessionKey and completion status
-- **Input Validation**: Early validation to prevent invalid database operations  
-- **Error Handling**: Graceful degradation with informative error messages
-- **Memory Management**: Efficient card shuffling and state management
 - **Containerization**: Easy horizontal scaling with Docker
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

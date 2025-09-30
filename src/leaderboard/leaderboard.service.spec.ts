@@ -3,7 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Game, GameDocument } from '../games/schemas/game.schema';
 import { LeaderboardService } from './leaderboard.service';
-import { LeaderboardDto } from 'src/games/dto/leader-board.dto';
+import { LeaderboardDto } from './dto/leader-board.dto';
 
 const mockGameModel = {
   find: jest.fn(),

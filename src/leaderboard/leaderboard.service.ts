@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Game, GameDocument } from '../games/schemas/game.schema';
 import { plainToInstance } from 'class-transformer';
-import { LeaderboardDto } from '../games/dto/leader-board.dto';
+import { LeaderboardDto } from './dto/leader-board.dto';
 
 export interface LeaderboardEntry {
 

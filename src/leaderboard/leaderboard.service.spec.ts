@@ -3,7 +3,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { LeaderboardService } from './leaderboard.service';
 import { Game, GameDocument } from '../games/schemas/game.schema';
-import { LeaderboardDto } from 'src/games/dto/leader-board.dto';
+import { LeaderboardDto } from '../games/dto/leader-board.dto';
 
 const mockGameModel = {
   find: jest.fn(),
@@ -12,6 +12,7 @@ const mockGameModel = {
 };
 
 describe('LeaderboardService', () => {
+  
   let service: LeaderboardService;
   let model: Model<GameDocument>;
 
@@ -39,6 +40,7 @@ describe('LeaderboardService', () => {
   });
 
   describe('getTopGames', () => {
+
     const mockCompletedGames = [
       {
         sessionKey: 'uuid-1',
@@ -64,6 +66,7 @@ describe('LeaderboardService', () => {
     ];
 
     beforeEach(() => {
+
       mockGameModel.find.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
@@ -74,23 +77,23 @@ describe('LeaderboardService', () => {
       mockGameModel.countDocuments.mockResolvedValue(3);
     });
 
-    it('should return paginated leaderboard with top 5 games as DTO', async () => {
+    it('should return leaderboard with top 5 games as DTO', async () => {
       const result: LeaderboardDto = await service.getTopGames();
 
       // Verify DTO structure
-      expect(result.attempts).toHaveLength(3);
+      expect(result.attempts).toHaveLength(5);
       
       // Verify content
-      expect(result.attempts[0].sessionKey).toBe('uuid-1');
-      expect(result.attempts[0].attempts).toBe(5);
-      expect(result.attempts[0].completionTime).toBe(120000); // 2 minutes in ms
-      expect(result.attempts[0].score).toBeDefined();
-      expect(result.attempts[0].startTime).toEqual(new Date('2024-01-01T10:00:00Z'));
-      expect(result.attempts[0].endTime).toEqual(new Date('2024-01-01T10:02:00Z'));
+      expect(result.topPlayers[0].sessionKey).toBe('uuid-1');
+      expect(result.topPlayers[0].attempts).toBe(5);
+      expect(result.topPlayers[0].completionTime).toBe(120000); // 2 minutes in ms
+      expect(result.topPlayers[0].score).toBeDefined();
+      expect(result.topPlayers[0].startTime).toEqual(new Date('2024-01-01T10:00:00Z'));
+      expect(result.topPlayers[0].endTime).toEqual(new Date('2024-01-01T10:02:00Z'));
       
       // Verify sorting (best scores first)
-      expect(result.attempts[0].attempts).toBeLessThan(result.attempts[1].attempts);
-      expect(result.attempts[1].attempts).toBeLessThan(result.attempts[2].attempts);
+      expect(result.topPlayers[0].attempts).toBeLessThan(result.topPlayers[1].attempts);
+      expect(result.topPlayers[1].attempts).toBeLessThan(result.topPlayers[2].attempts);
     });
 
     it('should call database with correct query parameters', async () => {
@@ -115,7 +118,7 @@ describe('LeaderboardService', () => {
       mockGameModel.countDocuments.mockResolvedValue(0);
       const result: LeaderboardDto = await service.getTopGames();
 
-      expect(result.attempts).toHaveLength(0);
+      expect(result.topPlayers).toHaveLength(0);
     });
 
     it('should calculate scores correctly in DTO', async () => {
@@ -125,36 +128,36 @@ describe('LeaderboardService', () => {
       // attemptsScore = 1000 - (5 * 10) = 950
       // timeScore = 1000 - (120000 / 1000) = 1000 - 120 = 880
       // average = (950 + 880) / 2 = 915
-      expect(result.attempts[0].score).toBe(915);
+      expect(result.topPlayers[0].score).toBe(915);
 
       // Test score calculation for second game (8 attempts, 300000ms)
       // attemptsScore = 1000 - (8 * 10) = 920
       // timeScore = 1000 - (300000 / 1000) = 1000 - 300 = 700
       // average = (920 + 700) / 2 = 810
-      expect(result.attempts[1].score).toBe(810);
+      expect(result.topPlayers[1].score).toBe(810);
 
       // Test score calculation for third game (12 attempts, 480000ms)
       // attemptsScore = 1000 - (12 * 10) = 880
       // timeScore = 1000 - (480000 / 1000) = 1000 - 480 = 520
       // average = (880 + 520) / 2 = 700
-      expect(result.attempts[2].score).toBe(700);
+      expect(result.topPlayers[2].score).toBe(700);
     });
 
     it('should return instances of proper DTO classes', async () => {
       const result: LeaderboardDto = await service.getTopGames();
 
-      // Verify each entry has the expected properties 
-      expect(result).toHaveProperty('sessionKey');
-      expect(result).toHaveProperty('attempts');
-      expect(result).toHaveProperty('completionTime');
-      expect(result).toHaveProperty('startTime');
-      expect(result).toHaveProperty('endTime');
-      expect(result).toHaveProperty('score');
-
+      // Check each entry has the expected properties 
+      expect(result.topPlayers[0]).toHaveProperty('sessionKey');
+      expect(result.topPlayers[0]).toHaveProperty('attempts');
+      expect(result.topPlayers[0]).toHaveProperty('completionTime');
+      expect(result.topPlayers[0]).toHaveProperty('startTime');
+      expect(result.topPlayers[0]).toHaveProperty('endTime');
+      expect(result.topPlayers[0]).toHaveProperty('score');
     });
   });
 
   describe('calculateScore', () => {
+
     it('should calculate score correctly for various inputs', () => {
       const calculateScore = (service as any).calculateScore.bind(service);
 

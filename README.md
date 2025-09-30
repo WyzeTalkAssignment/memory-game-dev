@@ -176,7 +176,7 @@ GET /leaderboard?limit=5
 **Response:**
 ```json
 {
-    "data": [
+    "topPlayers": [
         {
             "sessionKey": "d456781",
             "attempts": 38,
@@ -187,6 +187,7 @@ GET /leaderboard?limit=5
         }
     ]
 }
+
 
 ```
 

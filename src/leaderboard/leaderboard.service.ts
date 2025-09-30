@@ -63,7 +63,7 @@ export class LeaderboardService {
       this.gameModel.countDocuments(filterQuery)
     ]);
 
-    const data = completedGames.map((game) => {
+    const topPlayers = completedGames.map((game) => {
       const completionTime = game.endTime.getTime() - game.startTime.getTime();
       const score = this.calculateScore(game.attempts, completionTime);
       
@@ -78,7 +78,7 @@ export class LeaderboardService {
     });
 
     return plainToInstance(LeaderboardDto, {
-      data
+      topPlayers
     });
   }
 

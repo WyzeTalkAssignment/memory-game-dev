@@ -11,6 +11,8 @@ class MockGameModel {
   constructor(private data: any) {}
 
   save = jest.fn().mockResolvedValue(this.data);
+  toObject = jest.fn().mockReturnValue(this.data);
+  markModified = jest.fn();
 }
 
 const mockStaticMethods = {
@@ -44,6 +46,8 @@ const createMockGameDocument = (overrides: any = {}) => {
     matchedPairs: [],
     startTime: new Date(),
     save: jest.fn().mockResolvedValue(undefined),
+    toObject: jest.fn().mockImplementation(function() { return this; }),
+    markModified: jest.fn(),
   };
 
   return { ...baseDocument, ...overrides };
@@ -109,7 +113,6 @@ describe('GamesService', () => {
       expect(result.sessionKey).toBeDefined();
       expect(result.sessionKey).toHaveLength(36); // UUID v4 
     });
-
   });
 
   describe('findGame', () => {
@@ -224,7 +227,6 @@ describe('GamesService', () => {
       await expect(service.makeMove(sessionKey, makeMoveDto))
         .rejects.toThrow(BadRequestException);
     });
-
   });
 
   describe('getGameState', () => {
@@ -269,8 +271,6 @@ describe('GamesService', () => {
       expect(result.attempts).toBe(12);
       expect(result.revealedCards).toHaveLength(4);
     });
-
-    
   });
 
   describe('getGameHistory', () => {
@@ -298,10 +298,7 @@ describe('GamesService', () => {
       expect(result.pagination.hasNext).toBe(true);
       expect(result.pagination.hasPrev).toBe(false);
     });
-
-
   });
-
 
   describe('validation methods', () => {
     describe('validateCardPositions', () => {
@@ -336,8 +333,6 @@ describe('GamesService', () => {
         expect(() => validateCardPositions(['A1', 'A1'], mockGame))
           .toThrow('Cannot select the same card twice');
       });
-
-    
     });
 
     describe('validatePaginationParams', () => {

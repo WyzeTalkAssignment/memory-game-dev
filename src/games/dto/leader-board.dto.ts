@@ -7,6 +7,10 @@ export class LeaderboardDto {
   sessionKey: string;
 
   @Expose()
+  @IsString()
+  topPlayers:any[]
+
+  @Expose()
   @IsNumber()
   attempts: number;
 

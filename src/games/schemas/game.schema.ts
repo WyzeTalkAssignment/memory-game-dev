@@ -24,9 +24,9 @@ export class Game {
   @Prop({ required: true, unique: true })
   sessionKey: string;
 
-  @Prop({ required: true, type: Array })
-  cards: Card[];
-
+  @Prop({ required: false, type: Array })
+  cards?: Card[]; 
+  
   @Prop({ type: Array, default: [] })
   moves: GameMove[];
 

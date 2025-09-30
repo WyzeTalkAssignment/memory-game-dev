@@ -286,7 +286,7 @@ describe('GamesService', () => {
       const mockGame = createMockGameDocument({ moves: mockMoves });
       model.findOne.mockResolvedValue(mockGame);
 
-      const result: PaginatedGameHistory = await service.getGameHistory(sessionKey, 2, 1);
+      const result: PaginatedGameHistory = await service.getGameHistory(sessionKey, 2);
 
       expect(result.moves).toHaveLength(2);
       expect(result.moves[0].cards).toEqual(['A1', 'B1']);

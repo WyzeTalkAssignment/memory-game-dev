@@ -4,4 +4,5 @@ export class CreateGameDto {
   @IsOptional()
   @IsString()
   sessionKey?: string;
+
 }

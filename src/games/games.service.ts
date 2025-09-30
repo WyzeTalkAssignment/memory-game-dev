@@ -35,6 +35,8 @@ export class GamesService {
     @InjectModel(Game.name) private gameModel: Model<GameDocument>,
   ) {}
 
+
+  // Service method to start a new game, sessionKey optional/auto-generated
   async createGame(createGameDto: CreateGameDto): Promise<Game> {
     const sessionKey = createGameDto.sessionKey || uuidv4();
     
@@ -62,10 +64,19 @@ export class GamesService {
       isCompleted: false,
       matchedPairs: [],
     });
+    
+     await game.save();
 
-    return await game.save();
+    // Convert to object and remove sensitive fields including cards
+      const gameObj = game.toObject();
+      const { _id, __v, cards, ...cleanGame } = gameObj;
+      
+      return {
+        ...cleanGame,
+      };
   }
 
+  // Service method to find a game by sessionKey 
   async findGame(sessionKey: string): Promise<Game> {
     this.validateSessionKey(sessionKey);
     
@@ -77,115 +88,127 @@ export class GamesService {
     return game;
   }
 
-  async makeMove(sessionKey: string, makeMoveDto: MakeMoveDto): Promise<{
-    isMatch: boolean;
-    animals: string[];
-    gameCompleted: boolean;
-    message: string;
-    matchedPositions?: string[];
-  }> {
-    this.validateSessionKey(sessionKey);
-    
-    const game = await this.findGame(sessionKey) as GameDocument;
-    
-    if (game.isCompleted) {
-      throw new BadRequestException('Game is already completed');
-    }
+  // Service metod to handle player making a move
+async makeMove(sessionKey: string, makeMoveDto: MakeMoveDto): Promise<{
+  isMatch: boolean;
+  animals: string[];
+  gameCompleted: boolean;
+  message: string;
+  matchedPositions?: string[];
+}> {
+  this.validateSessionKey(sessionKey);
+  
+  const game = await this.findGame(sessionKey) as GameDocument;
+  
+  if (game.isCompleted) {
+    throw new BadRequestException('Game is already completed');
+  }
 
-    const { cards: positions } = makeMoveDto;
-    
-    this.validateCardPositions(positions, game);
+  const { cards: positions } = makeMoveDto;
+  
+  this.validateCardPositions(positions, game);
 
-    const card1 = game.cards.find(c => c.position === positions[0]);
-    const card2 = game.cards.find(c => c.position === positions[1]);
-    
-    if (!card1 || !card2) {
-      throw new BadRequestException('Invalid card positions');
-    }
-    
-    if (card1.isMatched || card2.isMatched) {
-      throw new BadRequestException('Cannot select already matched cards');
-    }
-
-    const animals = [card1.animal, card2.animal];
-    const isMatch = card1.animal === card2.animal;
-    
-    const move: GameMove = {
-      cards: positions,
-      animals,
-      isMatch,
-      timestamp: new Date(),
-    };
-    
-    game.moves.push(move);
-    game.attempts += 1;
-
-    let matchedPositions: string[] = [];
-    if (isMatch) {
-      card1.isMatched = true;
-      card2.isMatched = true;
-      game.matchedPairs.push([positions[0], positions[1]]);
-      matchedPositions = [positions[0], positions[1]];
-      
-      const allMatched = game.cards.every(card => card.isMatched);
-      if (allMatched) {
-        game.isCompleted = true;
-        game.endTime = new Date();
-      }
-    }
-
-    await game.save();
-
-    const message = isMatch 
-      ? `Match found! ${animals[0]} pairs matched.` 
-      : `No match. ${animals[0]} and ${animals[1]} don't match.`;
-
-    return {
-      isMatch,
-      animals,
-      gameCompleted: game.isCompleted,
-      message,
-      ...(isMatch && { matchedPositions })
-    };
+  const card1 = game.cards.find(c => c.position === positions[0]);
+  const card2 = game.cards.find(c => c.position === positions[1]);
+  
+  if (!card1 || !card2) {
+    throw new BadRequestException('Invalid card positions');
   }
   
-  async getGameState(sessionKey: string): Promise<{
-    sessionKey: string;
-    attempts: number;
-    matchedPairs: string[][];
-    isCompleted: boolean;
-    startTime: Date;
-    endTime?: Date;
-    revealedCards: { position: string; animal: string }[];
-    remainingCards: number;
-  }> {
-    this.validateSessionKey(sessionKey);
-
-    const game = await this.findGame(sessionKey);
-    
-    const revealedCards = game.cards
-      .filter(card => card.isMatched)
-      .map(card => ({ position: card.position, animal: card.animal }));
-
-    const remainingCards = game.cards.filter(card => !card.isMatched).length;
-
-    return {
-      sessionKey: game.sessionKey,
-      attempts: game.attempts,
-      matchedPairs: game.matchedPairs,
-      isCompleted: game.isCompleted,
-      startTime: game.startTime,
-      endTime: game.endTime,
-      revealedCards,
-      remainingCards,
-    };
+  if (card1.isMatched || card2.isMatched) {
+    throw new BadRequestException('Cannot select already matched cards');
   }
+
+  // REVEAL the cards for this move
+  card1.isRevealed = true;
+  card2.isRevealed = true;
+
+  const animals = [card1.animal, card2.animal];
+  const isMatch = card1.animal === card2.animal;
+  
+  const move: GameMove = {
+    cards: positions,
+    animals,
+    isMatch,
+    timestamp: new Date(),
+  };
+  
+  game.moves.push(move);
+  game.attempts += 1;
+
+  let matchedPositions: string[] = [];
+
+  if (isMatch) {
+    // Cards stay revealed and are marked as matched
+
+    card1.isMatched = true;
+    card2.isMatched = true;
+    game.matchedPairs.push([positions[0], positions[1]]);
+    matchedPositions = [positions[0], positions[1]];
+    
+    const allMatched = game.cards.every(card => card.isMatched);
+    if (allMatched) {
+      game.isCompleted = true;
+      game.endTime = new Date();
+    }
+  } 
+
+  game.markModified('cards');
+  game.markModified('moves');
+  game.markModified('matchedPairs');
+  await game.save();
+
+  const message = isMatch ? `Match found! ${animals[0]} pairs matched.` : `No match. ${animals[0]} and ${animals[1]} don't match.`;
+
+  return {
+    isMatch,
+    animals,
+    gameCompleted: game.isCompleted,
+    message,
+    ...(isMatch && { matchedPositions })
+  };
+}
+
+  async getGameState(sessionKey: string): Promise<{
+  sessionKey: string;
+  attempts: number;
+  matchedPairs: string[][];
+  isCompleted: boolean;
+  startTime: Date;
+  endTime?: Date;
+  revealedCards: { position: string; animal: string }[];
+  remainingCards: number;
+}> {
+  this.validateSessionKey(sessionKey);
+
+  const game = await this.findGame(sessionKey);
+
+  const revealedCards = game.cards
+    .filter(card => card.isMatched || card.isRevealed)
+    .map(card => ({ 
+      position: card.position, 
+      animal: card.animal 
+    }));
+
+  const remainingCards = game.cards.filter(card => !card.isMatched).length;
+
+  return {
+    sessionKey: game.sessionKey,
+    attempts: game.attempts,
+    matchedPairs: game.matchedPairs,
+    isCompleted: game.isCompleted,
+    startTime: game.startTime,
+    endTime: game.endTime,
+    revealedCards, 
+    remainingCards,
+  };
+}
 
   async getGameHistory(
     sessionKey: string, 
-    limit: number = 10, 
-    page: number = 1
+    limit: number = 10
   ): Promise<PaginatedGameHistory> {
+    const page = 1;
     this.validateSessionKey(sessionKey);
     this.validatePaginationParams(limit, page);
 
@@ -280,10 +303,9 @@ export class GamesService {
       throw new BadRequestException('Cannot select the same card twice');
     }
 
-    // Check if positions are valid
     const positionRegex = /^[A-D][1-4]$/;
     if (!positionRegex.test(positions[0]) || !positionRegex.test(positions[1])) {
-      throw new BadRequestException('Card positions must be in format A1, B2, C3, D4 etc.');
+      throw new BadRequestException('Card positions must be in in the range A - D, 1 - 4.');
     }
 
     // Check if positions exist in the game
@@ -313,4 +335,5 @@ export class GamesService {
       throw new BadRequestException('Limit and page must be integers');
     }
   }
+  
 }

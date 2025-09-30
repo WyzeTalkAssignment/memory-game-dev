@@ -4,9 +4,10 @@ REST API for a kids memory card game built with NestJS, TypeScript, and MongoDB.
 
 Author: Chris Masina (WyzeTalk Assignment)
 
-## 🎯 Game Overview
+##  Game Overview
 
 The memory game works as follows:
+
 - 16 cards (8 pairs of animals) are shuffled and laid face down in a 4x4 grid
 - Cards are positioned using column letters (A-D) and row numbers (1-4)
 - Players flip 2 cards per turn to find matching pairs
@@ -14,14 +15,13 @@ The memory game works as follows:
 - The goal is to match all pairs with the fewest attempts
 - Game completion time is tracked for leaderboard tiebreaking
 
-## 🚀 Features
+
+##  Features
 
 - **Game Management**: Start new games with unique session key
 - **Gameplay**: Submit cards and receive match results
 - **Game State Persistence**: MongoDB  with full game history
 - **Leaderboard System**: Top 5 games ranked by attempts and completion time
-- **Player Statistics**: Individual player performance 
-- **Input Validation**:  validation and error handling
 - **Containerized Deployment**: Docker and Docker Compose support
 - **Comprehensive Testing**: Unit tests with good coverage
 
@@ -29,11 +29,11 @@ The memory game works as follows:
 
 - **Framework**: NestJS with TypeScript
 
-- **Database**: MongoDB with Mongoose ODM. I used a cloud-hosted (Atlas) instance, but we can also use a mongo instance in our cluster. if you prefer a local instance setup: 
+- **Database**: MongoDB with Mongoose ODM. 
 
 MONGODB_URI=mongodb://localhost:27017/memory-game
 
-- **Database Production setup**: In PROD we will spin up a k8s service and them kubenette manage it.to reduce th load on MongoDB and promote horizontal scaling and speed up the game, we would impl a shared redis cache in the cluster
+- **Ideal Production setup**: In PROD we would spin up a pod in a k8s cluster. To reduce the load on MongoDB, promote horizontal scaling and speed up the game, we would impl CacheModule and store game state externally in a shared redis cache in the cluster. 
 
 - **Testing**: Jest with comprehensive unit tests
 
@@ -41,7 +41,8 @@ MONGODB_URI=mongodb://localhost:27017/memory-game
 
 - **Process Management**: PM2 for production deployment
 
-Added performance tweaks Cache management and pagination support for front-end
+Added performance tweak - pagination support for front-end
+
 
 ## 📋 API Endpoints
 
@@ -49,7 +50,7 @@ Added performance tweaks Cache management and pagination support for front-end
 
 #### Start New Game
 ```http
-POST /games
+POST /games/start
 Content-Type: application/json
 
 {
@@ -60,50 +61,109 @@ Content-Type: application/json
 **Response:**
 ```json
 {
-  "sessionKey": "gameId",
-  "message": "New game started successfully!",
-  "startTime": "2024-01-15T10:00:00.000Z"
+    "sessionKey": "d456781",
+    "moves": [
+    ],
+    "attempts": 0,
+    "startTime": "2025-09-30T06:24:03.516Z",
+    "isCompleted": false,
+    "matchedPairs": [
+    ],
+    "createdAt": "2025-09-30T06:24:03.534Z",
+    "updatedAt": "2025-09-30T06:24:03.534Z"
 }
+```
+
+
+#### Make a move
+
+```http
+POST /games/d456781/submit
+Content-Type: application/json
+
+{
+  "cards": ["D2", "B1"]
+}
+```
+
+**Response:**
+```json
+{
+    "isMatch": false,
+    "animals": [
+        "Rabbit",
+        "Dog"
+    ],
+    "gameCompleted": false,
+    "message": "No match. Rabbit and Dog don't match."
+}
+
+
 ```
 
 #### Get Game State
 ```http
-GET /games/:sessionKey
+GET /games/d456781/status
 ```
 
 **Response:**
 ```json
 {
-  "sessionKey": "game-session-123",
-  "attempts": 5,
-  "matchedPairs": [["A1", "B2"], ["C3", "D4"]],
-  "isCompleted": false,
-  "startTime": "2024-01-15T10:00:00.000Z",
-  "revealedCards": [
-    {"position": "A1", "animal": "Dog"},
-    {"position": "B2", "animal": "Dog"}
-  ]
+    "sessionKey": "d456781",
+    "attempts": 1,
+    "matchedPairs": [
+    ],
+    "isCompleted": false,
+    "startTime": "2025-09-30T08:33:16.423Z",
+    "revealedCards": [
+        {
+            "position": "B1",
+            "animal": "Dog"
+        },
+        {
+            "position": "D2",
+            "animal": "Rabbit"
+        }
+    ],
+    "remainingCards": 16
 }
+
 ```
 
-#### Make a Move
+#### Get Game History
+The Limit set the nuumber of Game moves in one page
+
 ```http
-POST /games/:sessionKey/moves
-Content-Type: application/json
-
-{
-  "cards": ["A1", "B3"]
-}
+GET games/d456781/history?limit=5
 ```
 
 **Response:**
 ```json
 {
-  "isMatch": true,
-  "animals": ["Dog", "Dog"],
-  "gameCompleted": false,
-  "message": "Match found! Dog pairs matched."
+    "moves": [
+        {
+            "cards": [
+                "D2",
+                "B1"
+            ],
+            "animals": [
+                "Rabbit",
+                "Dog"
+            ],
+            "isMatch": false,
+            "timestamp": "2025-09-30T08:36:52.710Z"
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 5,
+        "total": 1,
+        "totalPages": 1,
+        "hasNext": false,
+        "hasPrev": false
+    }
 }
+
 ```
 
 ### Leaderboard
@@ -115,15 +175,19 @@ GET /leaderboard?limit=5
 
 **Response:**
 ```json
-[
-  {
-    "sessionKey": "best-player-123",
-    "attempts": 8,
-    "completionTime": 120000,
-    "startTime": "2024-01-15T10:00:00.000Z",
-    "endTime": "2024-01-15T10:02:00.000Z"
-  }
-]
+{
+    "data": [
+        {
+            "sessionKey": "d456781",
+            "attempts": 38,
+            "completionTime": 4063919,
+            "startTime": "2025-09-30T06:24:03.516Z",
+            "endTime": "2025-09-30T07:31:47.435Z",
+            "score": 310
+        }
+    ]
+}
+
 ```
 
 #### Get Player Statistics
@@ -145,8 +209,8 @@ GET /leaderboard/player/:sessionKey
 
 ### Prerequisites
 - Node.js 18+ 
-- MongoDB (local or cloud)
-- Docker (optional)
+- MongoDB
+- Docker
 
 ### Local Development
 
@@ -169,15 +233,10 @@ npm run start:dev
 
 4. **Run tests:**
 ```bash
+
 # Unit tests
 npm test
 
-# Test coverage
-npm run test:cov
-
-# Watch mode
-npm run test:watch
-```
 
 ### Docker Deployment
 

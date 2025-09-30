@@ -87,7 +87,7 @@ describe('GamesService', () => {
   describe('createGame', () => {
     const createGameDto: CreateGameDto = { sessionKey: 'test-session' };
 
-    it('should create a new game with provided session key', async () => {
+   it('should create a new game with provided session key', async () => {
       model.findOne.mockResolvedValue(null);
 
       const result = await service.createGame(createGameDto);
@@ -97,8 +97,11 @@ describe('GamesService', () => {
         isCompleted: false,
       });
 
-      expect(result.sessionKey).toBe('test-session');
+      expect(result).not.toBeNull();
+      expect(result.cards).not.toBeUndefined();
       expect(result.cards).toHaveLength(16);
+      
+      expect(result.sessionKey).toBe('test-session');
       expect(result.isCompleted).toBe(false);
       expect(result.attempts).toBe(0);
       expect(result.moves).toEqual([]);
@@ -170,7 +173,7 @@ describe('GamesService', () => {
 
     it('should handle non-matching cards correctly', async () => {
       const mockGame = createMockGameDocument();
-      mockGame.cards[1].animal = 'Cat'; // Make B1 a different animal
+      mockGame.cards[1].animal = 'Cat'; 
       model.findOne.mockResolvedValue(mockGame);
 
       const result = await service.makeMove(sessionKey, { cards: ['A1', 'B1'] });

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { LeaderboardService } from './leaderboard.service';
 import { Game, GameDocument } from '../games/schemas/game.schema';
-import { LeaderboardDto } from '../games/dto/leader-board.dto';
+import { LeaderboardService } from './leaderboard.service';
+import { LeaderboardDto } from 'src/games/dto/leader-board.dto';
 
 const mockGameModel = {
   find: jest.fn(),
@@ -12,7 +12,7 @@ const mockGameModel = {
 };
 
 describe('LeaderboardService', () => {
-  
+
   let service: LeaderboardService;
   let model: Model<GameDocument>;
 
@@ -78,7 +78,7 @@ describe('LeaderboardService', () => {
     });
 
     it('should return leaderboard with top 5 games as DTO', async () => {
-      const result: LeaderboardDto = await service.getTopGames();
+      const result = await service.getTopGames();
 
       // Verify DTO structure
       expect(result.attempts).toHaveLength(5);

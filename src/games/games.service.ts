@@ -67,7 +67,7 @@ export class GamesService {
     
      await game.save();
 
-    // Convert to object and remove sensitive fields including cards
+    // Convert to object and remove sensitive data including cards from dto (promoting encapsulation)
       const gameObj = game.toObject();
       const { _id, __v, cards, ...cleanGame } = gameObj;
       

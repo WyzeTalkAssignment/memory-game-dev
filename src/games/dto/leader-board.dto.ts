@@ -8,7 +8,7 @@ export class LeaderboardDto {
 
   @Expose()
   @IsString()
-  topPlayers:any[]
+  topPlayers:any[];
 
   @Expose()
   @IsNumber()

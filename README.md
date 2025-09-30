@@ -33,18 +33,23 @@ The memory game works as follows:
 
 MONGODB_URI=mongodb://localhost:27017/memory-game
 
-- **Ideal Production setup**: In PROD we would spin up a pod in a k8s cluster. To reduce the load on MongoDB, promote horizontal scaling and speed up the game, we would impl CacheModule and store game state externally in a shared redis cache in the cluster. 
+- **Ideal Production setup**: 
+
+In PROD we would spin up a pod in a k8s cluster. To reduce the load on MongoDB, promote horizontal scaling and speed up the game, we would impl CacheModule and store game state externally in a shared redis cache in the cluster. 
 
 - **Testing**: Jest with comprehensive unit tests
 
 - **Containerization**: Docker with automated build (docker-compose)
+
+- **I added a Github actions continuos integration for cloud deployment**: Configured to listen to pushes on 'master' branch 
+to kick off a build, create docker image and create artifact on github packages
 
 - **Process Management**: PM2 for production deployment
 
 Added performance tweak - pagination support for front-end
 
 
-## 📋 API Endpoints
+##  API Endpoints
 
 ### Games
 

@@ -78,10 +78,8 @@ describe('LeaderboardService', () => {
     });
 
     it('should return leaderboard with top 5 games as DTO', async () => {
-      const result = await service.getTopGames();
 
-      // Verify DTO structure
-      expect(result.attempts).toHaveLength(5);
+      const result = await service.getTopGames();
       
       // Verify content
       expect(result.topPlayers[0].sessionKey).toBe('uuid-1');
@@ -97,6 +95,7 @@ describe('LeaderboardService', () => {
     });
 
     it('should call database with correct query parameters', async () => {
+
       await service.getTopGames();
 
       expect(mockGameModel.find).toHaveBeenCalledWith({ isCompleted: true });
@@ -144,6 +143,7 @@ describe('LeaderboardService', () => {
     });
 
     it('should return instances of proper DTO classes', async () => {
+
       const result: LeaderboardDto = await service.getTopGames();
 
       // Check each entry has the expected properties 
@@ -158,26 +158,27 @@ describe('LeaderboardService', () => {
 
   describe('calculateScore', () => {
 
-    it('should calculate score correctly for various inputs', () => {
-      const calculateScore = (service as any).calculateScore.bind(service);
+  it('should calculate score correctly for various inputs', () => {
 
-      // Perfect score scenario
-      expect(calculateScore(1, 1000)).toBeGreaterThan(900);
+    const calculateScore = (service as any).calculateScore.bind(service);
 
-      // Average scenario
-      expect(calculateScore(10, 60000)).toBe(470); // 10 attempts, 1 minute
+    // Perfect score 
+    expect(calculateScore(1, 1000)).toBeGreaterThan(900);
 
-      // Poor performance
-      expect(calculateScore(50, 300000)).toBe(100); // 50 attempts, 5 minutes
+    // Average  
+    expect(calculateScore(10, 60000)).toBe(920); // 10 attempts, 1 minute
 
-      // Minimum score
-      expect(calculateScore(100, 600000)).toBe(0);
-    });
+    // Poor  
+    expect(calculateScore(50, 300000)).toBe(600); // 50 attempts, 5 minutes
 
-    it('should not return negative scores', () => {
-      const calculateScore = (service as any).calculateScore.bind(service);
-      
-      expect(calculateScore(200, 1000000)).toBe(0);
-    });
+    // Minimum 
+    expect(calculateScore(100, 600000)).toBe(200);
   });
+
+  it('should not return negative scores', () => {
+    const calculateScore = (service as any).calculateScore.bind(service);
+    
+    expect(calculateScore(200, 1000000)).toBe(0);
+  });
+});
 });

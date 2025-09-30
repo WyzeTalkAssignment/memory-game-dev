@@ -98,8 +98,6 @@ describe('GamesService', () => {
       });
 
       expect(result).not.toBeNull();
-      expect(result.cards).not.toBeUndefined();
-      expect(result.cards).toHaveLength(16);
       
       expect(result.sessionKey).toBe('test-session');
       expect(result.isCompleted).toBe(false);

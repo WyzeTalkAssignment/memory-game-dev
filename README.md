@@ -52,13 +52,10 @@ Added performance tweak - pagination support for front-end
 
 
 
-##  Run API
+##  Running API
 
 There is no auth setup for the API
 
-```
-npm run start:dev
-```
 
 ##  Build
 ```
@@ -217,6 +214,7 @@ GET /leaderboard?limit=5
 ## Installation & Development
 
 ### Prerequisites
+
 - Node.js 18+ 
 - MongoDB
 - Docker
@@ -224,6 +222,7 @@ GET /leaderboard?limit=5
 ### Local Development
 
 1. **Clone and setup:**
+
 ```bash
 cd memory-game-api
 npm install
@@ -231,16 +230,19 @@ npm install
 
 2. **Environment setup:**
 ```bash
+
 # Set MongoDB URI (optional, defaults to localhost)
 export MONGODB_URI=mongodb://localhost:27017/memory-game
 ```
 
 3. **Start development server:**
+
 ```bash
 npm run start:dev
 ```
 
 4. **Run tests:**
+
 ```bash
 
 # Unit tests

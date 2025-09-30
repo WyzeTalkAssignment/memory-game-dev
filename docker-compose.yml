@@ -7,7 +7,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://your-mongo-host:27017/memory-game
+      - MONGODB_URI=mongodb://localhost:27017/memory-game
     depends_on:
       - mongo
     restart: unless-stopped

@@ -25,7 +25,7 @@ The memory game works as follows:
 - **Containerized Deployment**: Docker and Docker Compose support
 - **Comprehensive Testing**: Unit tests with good coverage
 
-## 🛠 Technology Stack
+## Technology Stack
 
 - **Framework**: NestJS with TypeScript
 

@@ -35,7 +35,7 @@ export class LeaderboardController {
    * score, including player statistics and completion metrics.
    *  * 
    */
-  @Get()
+  @Get('/top')
   async getLeaderboard(
   ) {
     return await this.leaderboardService.getTopGames();

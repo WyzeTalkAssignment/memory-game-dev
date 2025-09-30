@@ -147,13 +147,13 @@ describe('GamesService', () => {
 
   describe('makeMove', () => {
     const sessionKey = 'test-session';
-    const makeMoveDto: MakeMoveDto = { cards: ['A1', 'B1'] };
+    const makeMoveDto: MakeMoveDto = { cards: ['A1', 'B1'], sessionKey: sessionKey };
 
     it('should handle matching cards correctly', async () => {
       const mockGame = createMockGameDocument();
       model.findOne.mockResolvedValue(mockGame);
 
-      const result = await service.makeMove(sessionKey, makeMoveDto);
+      const result = await service.makeMove( makeMoveDto);
 
       expect(result.isMatch).toBe(true);
       expect(result.animals).toEqual(['Dog', 'Dog']);
@@ -172,9 +172,11 @@ describe('GamesService', () => {
     it('should handle non-matching cards correctly', async () => {
       const mockGame = createMockGameDocument();
       mockGame.cards[1].animal = 'Cat'; 
-      model.findOne.mockResolvedValue(mockGame);
-
-      const result = await service.makeMove(sessionKey, { cards: ['A1', 'B1'] });
+      const makeMoveDto: MakeMoveDto = model.findOne.mockResolvedValue(mockGame);
+      
+      const sessionKey = 'test-session';
+      makeMoveDto.sessionKey=sessionKey;
+      const result = await service.makeMove(makeMoveDto);
 
       expect(result.isMatch).toBe(false);
       expect(result.animals).toEqual(['Dog', 'Cat']);
@@ -193,7 +195,7 @@ describe('GamesService', () => {
       mockGame.cards[3].isMatched = true;
       model.findOne.mockResolvedValue(mockGame);
 
-      const result = await service.makeMove(sessionKey, makeMoveDto);
+      const result = await service.makeMove(makeMoveDto);
 
       expect(result.gameCompleted).toBe(true);
       expect(mockGame.isCompleted).toBe(true);
@@ -203,20 +205,57 @@ describe('GamesService', () => {
 
     it('should throw error for same card selection', async () => {
       const mockGame = createMockGameDocument();
-      model.findOne.mockResolvedValue(mockGame);
+      const makeMoveDto: MakeMoveDto = model.findOne.mockResolvedValue(mockGame);
+      const mockDuplicateCards: Card[]=
+      [{
+          id: 'test-id',
+          animal: 'Horse',
+          position: 'A1', 
+          isMatched: false,
+          isRevealed: false
+        },
+        {
+          id: 'test-id1',
+          animal: 'Horse',
+          position: 'A1', 
+          isMatched: false,
+          isRevealed: false
+        }];
+      const sessionKey = 'test-session';
+      makeMoveDto.sessionKey=sessionKey;
+      makeMoveDto.cards = mockDuplicateCards.map(i => i.position);
+      const result = await service.makeMove(makeMoveDto);
 
-      await expect(service.makeMove(sessionKey, { cards: ['A1', 'A1'] }))
+      await expect(result)
         .rejects.toThrow(BadRequestException);
     });
 
     it('should throw error for invalid card positions', async () => {
       const mockGame = createMockGameDocument();
-      model.findOne.mockResolvedValue(mockGame);
-
-      await expect(service.makeMove(sessionKey, { cards: ['A1', 'E5'] }))
+     const makeMoveDto: MakeMoveDto = model.findOne.mockResolvedValue(mockGame);
+      const mockInvalidCards: Card[]=
+      [{
+          id: 'test-id',
+          animal: 'Horse',
+          position: 'E5', 
+          isMatched: false,
+          isRevealed: false
+        },
+        {
+          id: 'test-id1',
+          animal: 'Horse',
+          position: 'A1', 
+          isMatched: false,
+          isRevealed: false
+        }];
+      const sessionKey = 'test-session';
+      makeMoveDto.sessionKey=sessionKey;
+      makeMoveDto.cards = mockInvalidCards.map(i => i.position);
+      const result = await service.makeMove(makeMoveDto);
+      await expect(service.makeMove(makeMoveDto))
         .rejects.toThrow(BadRequestException);
       
-      await expect(service.makeMove(sessionKey, { cards: ['A1', 'Z9'] }))
+     await expect(service.makeMove(makeMoveDto))
         .rejects.toThrow(BadRequestException);
     });
 
@@ -225,7 +264,7 @@ describe('GamesService', () => {
       mockGame.cards[0].isMatched = true; // A1 is already matched
       model.findOne.mockResolvedValue(mockGame);
 
-      await expect(service.makeMove(sessionKey, makeMoveDto))
+      await expect(service.makeMove( makeMoveDto))
         .rejects.toThrow(BadRequestException);
     });
   });

@@ -63,8 +63,9 @@ export class GamesController {
    * @param sessionKey - Unique identifier for the game session
    * @returns A Promise that resolves to the game state. Game moves have a default limit of 10 records per page
    * */
-  @Get(':sessionKey/status')
+  @Get('/status/:sessionKey')
   async getGameState(@Param('sessionKey') sessionKey: string) {
+    console.log(sessionKey)
      if (!sessionKey || sessionKey === '') {
         throw new BadRequestException('sessionKey is required');
     }
@@ -83,13 +84,12 @@ export class GamesController {
    * @param makeMoveDto - Data transfer object containing card positions to reveal
    * @returns A Promise that resolves to move result 
    */
-  @Post(':sessionKey/submit')
+  @Post('/submit')
   @HttpCode(HttpStatus.OK)
   async makeMove(
-    @Param('sessionKey') sessionKey: string,
     @Body() makeMoveDto: MakeMoveDto,
   ) {
-    return await this.gamesService.makeMove(sessionKey, makeMoveDto);
+    return await this.gamesService.makeMove(makeMoveDto);
   }
 
    /**
@@ -103,7 +103,7 @@ export class GamesController {
    * @param limit - Maximum number of moves to return (1-50, default: 10)
    * @returns A Promise that resolves to paginated move history
    */ 
-  @Get(':sessionKey/history')
+  @Get('/history/:sessionKey')
   async getGameHistory(
    
     @Param('sessionKey') sessionKey: string,

@@ -38,7 +38,7 @@ export class GamesService {
 
   // Service method to start a new game, sessionKey optional/auto-generated
   async createGame(createGameDto: CreateGameDto): Promise<Game> {
-    const sessionKey = createGameDto.sessionKey || uuidv4();
+    const sessionKey = createGameDto.sessionKey || uuidv4().replace('-','');
     
     if (createGameDto.sessionKey) {
       this.validateSessionKey(createGameDto.sessionKey);
@@ -89,16 +89,16 @@ export class GamesService {
   }
 
   // Service metod to handle player making a move
-async makeMove(sessionKey: string, makeMoveDto: MakeMoveDto): Promise<{
+async makeMove( makeMoveDto: MakeMoveDto): Promise<{
   isMatch: boolean;
   animals: string[];
   gameCompleted: boolean;
   message: string;
   matchedPositions?: string[];
 }> {
-  this.validateSessionKey(sessionKey);
+  this.validateSessionKey(makeMoveDto.sessionKey);
   
-  const game = await this.findGame(sessionKey) as GameDocument;
+  const game = await this.findGame(makeMoveDto.sessionKey) as GameDocument;
   
   if (game.isCompleted) {
     throw new BadRequestException('Game is already completed');

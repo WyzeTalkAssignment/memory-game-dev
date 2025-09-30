@@ -81,7 +81,7 @@ Content-Type: application/json
 **Response:**
 ```json
 {
-    "sessionKey": "d456781",
+    "sessionKey": "64f4360a965e4f5a98f16e4ea70aa6c4",
     "moves": [
     ],
     "attempts": 0,
@@ -98,11 +98,12 @@ Content-Type: application/json
 #### Make a move
 
 ```http
-POST /games/d456781/submit
+POST /games/submit
 Content-Type: application/json
 
 {
-  "cards": ["D2", "B1"]
+  "sessionKey": "64f4360a965e4f5a98f16e4ea70aa6c4",
+  "cards": ["D1", "B1"]
 }
 ```
 
@@ -111,25 +112,26 @@ Content-Type: application/json
 {
     "isMatch": false,
     "animals": [
-        "Rabbit",
-        "Dog"
+        "Dog",
+        "Cat"
     ],
     "gameCompleted": false,
-    "message": "No match. Rabbit and Dog don't match."
+    "message": "No match. Dog and Cat don't match."
 }
+
 
 
 ```
 
 #### Get Game State
 ```http
-GET /games/d456781/status
+GET /games/status/64f4360a965e4f5a98f16e4ea70aa6c4
 ```
 
 **Response:**
 ```json
 {
-    "sessionKey": "d456781",
+    "sessionKey": "64f4360a965e4f5a98f16e4ea70aa6c4",
     "attempts": 1,
     "matchedPairs": [
     ],
@@ -154,7 +156,7 @@ GET /games/d456781/status
 The Limit set the nuumber of Game moves in one page
 
 ```http
-GET games/d456781/history?limit=5
+GET games/history/64f4360a965e4f5a98f16e4ea70aa6c4?limit=5
 ```
 
 **Response:**
@@ -190,7 +192,7 @@ GET games/d456781/history?limit=5
 
 #### Get Top Games
 ```http
-GET /leaderboard?limit=5
+GET /leaderboard/top?limit=5
 ```
 
 **Response:**
@@ -198,7 +200,7 @@ GET /leaderboard?limit=5
 {
     "topPlayers": [
         {
-            "sessionKey": "d456781",
+            "sessionKey": "64f4360a965e4f5a98f16e4ea70aa6c4",
             "attempts": 38,
             "completionTime": 4063919,
             "startTime": "2025-09-30T06:24:03.516Z",

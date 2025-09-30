@@ -51,11 +51,27 @@ https://github.com/WyzeTalkAssignment/memory-game-dev/actions/workflows/build-wo
 Added performance tweak - pagination support for front-end
 
 
+
+##  Run API
+
+There is no auth setup for the API
+
+```
+npm run start:dev
+```
+
+##  Build
+```
+npm run build
+
+```
 ##  API Endpoints
 
 ### Games
 
 #### Start New Game
+
+
 ```http
 POST /games/start
 Content-Type: application/json

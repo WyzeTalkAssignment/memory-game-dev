@@ -227,22 +227,16 @@ jobs:
       with:
         files: ${{ env.PACKAGE_PATH }}
 
-  notify:
-    name: Notify Status
-    runs-on: ubuntu-latest
-    needs: [test, build, docker-build-push, publish-package]
-    if: always()
-    
     steps:
     - name: Notify on success
       if: needs.test.result == 'success' && needs.build.result == 'success' && needs.docker-build-push.result == 'success'
       run: |
-        echo "✅ CI/CD Pipeline completed successfully!"
-        echo "🐳 Docker Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-        echo "🔖 Tags: latest, ${{ github.sha }}"
+        echo " CI/CD Pipeline completed successfully!"
+        echo " Docker Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+        echo " Tags: latest, ${{ github.sha }}"
 
     - name: Notify on failure
       if: needs.test.result == 'failure' || needs.build.result == 'failure' || needs.docker-build-push.result == 'failure'
       run: |
-        echo "❌ CI/CD Pipeline failed!"
+        echo " CI/CD Pipeline failed!"
         exit 1

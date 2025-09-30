@@ -38,8 +38,10 @@ export class GamesService {
 
   // Service method to start a new game, sessionKey optional/auto-generated
   async createGame(createGameDto: CreateGameDto): Promise<Game> {
-    const sessionKey = createGameDto.sessionKey || uuidv4().replace('-','');
     
+    let sessionKey = createGameDto.sessionKey || uuidv4().replace(/-/g, '');
+    createGameDto.sessionKey=sessionKey;
+
     if (createGameDto.sessionKey) {
       this.validateSessionKey(createGameDto.sessionKey);
     }

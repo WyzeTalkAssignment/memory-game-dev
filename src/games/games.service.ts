@@ -297,7 +297,7 @@ async makeMove( makeMoveDto: MakeMoveDto): Promise<{
   }
 
   private validateCardPositions(positions: string[], game: Game): void {
-    if (positions.length !== 2) {
+    if (positions && positions.length !== 2) {
       throw new BadRequestException('Must select exactly 2 cards');
     }
 

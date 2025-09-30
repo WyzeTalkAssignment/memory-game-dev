@@ -11,7 +11,7 @@ import { ConfigModule } from '@nestjs/config';
      MongooseModule.forRoot(
         process.env.MONGODB_URI 
     ),
-  
+
     GamesModule,
     LeaderboardModule,
   ],

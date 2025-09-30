@@ -203,4 +203,3 @@ jobs:
       if: needs.test.result == 'failure' || needs.build.result == 'failure' || needs.docker-build-push.result == 'failure'
       run: |
         echo " CI/CD Pipeline failed!"
-        # exit 1

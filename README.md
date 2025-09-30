@@ -44,7 +44,7 @@ In PROD we would spin up a pod in a k8s cluster. To reduce the load on MongoDB, 
 - **I added a Github actions continuos integration for cloud deployment**: Configured to listen to pushes on 'master' branch 
 to kick off a build, create docker image and create artifact on github packages, and live logs available on:
 
-https://github.com/WyzeTalkAssignment/memory-game-dev/actions/
+https://github.com/WyzeTalkAssignment/memory-game-dev/actions/workflows/build-workflow.yml
 
 - **Process Management**: PM2 for production deployment
 

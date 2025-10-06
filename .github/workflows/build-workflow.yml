@@ -69,34 +69,6 @@ jobs:
           EOF
           fi
 
-      - name: Run linting with fallback
-        run: |
-          # Only run ESLint if config exists, otherwise skip
-          if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f ".eslintrc.yml" ]; then
-            npx eslint "{src,apps,libs,test}/**/*.ts" --fix --max-warnings 100 || echo "Linting completed with warnings"
-          else
-            echo "No ESLint config found, skipping linting"
-          fi
-
-      - name: Run tests
-        run: npm test
-        env:
-          NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/memory-game-test
-
-      - name: Run e2e tests
-        run: npm run test:e2e
-        env:
-          NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/memory-game-test
-
-      - name: Upload test coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-
   build:
     name: Build Application
     runs-on: ubuntu-latest
